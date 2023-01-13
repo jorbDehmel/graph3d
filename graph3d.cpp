@@ -1,127 +1,162 @@
+/////////////////////////////////////////
+
 #include "graph3d.hpp"
+
+/////////////////////////////////////////
+
+SDL_Color __DefaultColorFunction(const double &in)
+{
+    Uint8 val = 255 / (1 + pow(2.718281821, -(in / 10)));
+
+    SDL_Color out;
+    out.a = 255;
+    out.r = out.g = out.b = val;
+
+    return out;
+}
+
+/////////////////////////////////////////
 
 Graph3D::Graph3D(const int W, const int H, const double (*Equation)(const double &, const double &),
                  SDL_Color (*ColorEquation)(const double &))
 {
+    SDL_Init(SDL_INIT_EVERYTHING);
+
     SDL_CreateWindowAndRenderer(W, H, SDL_WINDOW_OPENGL, &wind, &rend);
 
     equation = Equation;
-    slicer = new Slicer(rend);
+    colorEquation = ColorEquation;
 
     rotation = Rotation(0, 0, 0);
-    transpose = Point3D(0, 0, 0);
+    transpose = Point3D(W / 2, H / 2, 200);
     scale = 1;
 
-    render();
+    horizon.x = W / 2;
+    horizon.y = H / 2;
+    horizon.z = 100;
 
     return;
 }
 
 Graph3D::~Graph3D()
 {
-    delete slicer;
+    SDL_DestroyRenderer(rend);
+    SDL_DestroyWindow(wind);
+
+    SDL_Quit();
 
     return;
 }
 
-void Graph3D::incRotation(const Rotation By)
+/////////////////////////////////////////
+
+bool __sortFunction(const ColorWrapper &a, const ColorWrapper &b)
 {
-    rotation.x += By.x;
-    rotation.y += By.y;
-    rotation.z += By.z;
-
-    return;
-}
-
-void Graph3D::incScale(const double By)
-{
-    scale += By;
-
-    return;
-}
-
-void Graph3D::setRotation(const Rotation To)
-{
-    rotation = To;
-
-    return;
-}
-
-void Graph3D::setScale(const double To)
-{
-    scale = To;
-
-    return;
-}
-
-void Graph3D::resetScale()
-{
-    scale = 0;
-
-    return;
-}
-
-void Graph3D::resetRotation()
-{
-    rotation.x = rotation.y = rotation.z = 0;
-
-    return;
-}
-
-void Graph3D::render()
-{
-    slicer->render();
-
-    return;
+    return a.p.z > b.p.z;
 }
 
 void Graph3D::refresh()
 {
-    // Clear slicer
-    slicer->models.clear();
+    SDL_SetRenderDrawColor(rend, 0, 0, 0, 0);
+    SDL_RenderClear(rend);
 
-    // construct plane lines, add to slicer
+    vector<ColorWrapper> points;
 
-    // calculate points, add to slicer as polygons
-    for (double x = min.x; x < max.x; x += xSpacing)
+    // construct plane lines
+    if (doAxii)
     {
-        for (double y = min.y; y < max.y; x += ySpacing)
+        for (double x = min.x; x < max.x; x += xSpacing)
         {
-            Point3D toAdd(x, y, equation(x, y));
-            addPoint(toAdd);
+            Point3D toAdd = convertPoint(Point3D(x, 0, 0));
+            points.push_back(ColorWrapper(toAdd, axisColor));
+        }
+        for (double y = min.y; y < max.y; y += ySpacing)
+        {
+            Point3D toAdd = convertPoint(Point3D(0, y, 0));
+            points.push_back(ColorWrapper(toAdd, axisColor));
+        }
+        for (double z = min.z; z < max.z; z += ySpacing)
+        {
+            Point3D toAdd = convertPoint(Point3D(0, 0, z));
+            points.push_back(ColorWrapper(toAdd, axisColor));
         }
     }
 
-    // call slicer to render
-    render();
+    // calculate points
+    for (double x = min.x; x < max.x; x += xSpacing)
+    {
+        for (double y = min.y; y < max.y; y += ySpacing)
+        {
+            Point3D cur(x, y, equation(x, y));
+
+            if (cur.z > min.z && cur.z < max.z)
+            {
+                SDL_Color color = colorEquation(cur.z);
+                points.push_back(ColorWrapper{convertPoint(cur), color});
+            }
+        }
+    }
+
+    // Render points
+    sort(points.begin(), points.end(), __sortFunction);
+
+    for (int i = 0; i < points.size(); i++)
+    {
+        SDL_Color color = points[i].color;
+        SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a);
+
+        renderPoint(points[i].p);
+    }
+
+    SDL_RenderPresent(rend);
 
     return;
 }
 
-void Graph3D::addPoint(const Point3D what)
+/////////////////////////////////////////
+
+// convert point from graph coordinates to absolute rendering coordinates
+Point3D Graph3D::convertPoint(const Point3D what)
 {
-    // get scaled point from what
-    Point3D scaled = convertPoint(what);
+    Point3D out;
+    out.x = what.x * scale;
+    out.y = what.y * scale;
+    out.z = what.z * scale;
 
-    // Create cube to represent point
-    Model temp;
-    SDL_Color color = colorEquation(what.z);
-    createCube(temp, color, dotSize * 2);
+    rotate(out, rotation);
 
-    // Adjust to be about origin
-    move(temp, Point3D(-dotSize, -dotSize, -dotSize));
+    out.x += transpose.x;
+    out.y += transpose.y;
+    out.z += transpose.z;
 
-    // Move to be at position of scaled point
-    move(temp, scaled);
+    return out;
+}
 
-    // Add to slicer
-    slicer->models.push_back(temp);
+void Graph3D::renderPoint(const Point3D what)
+{
+    SDL_FPoint projected = projectPoint(what);
+
+    SDL_Rect toRend;
+    toRend.x = projected.x - dotSize;
+    toRend.y = projected.y - dotSize;
+    toRend.w = toRend.h = dotSize * 2;
+
+    SDL_RenderFillRect(rend, &toRend);
 
     return;
 }
 
-Point3D convertPoint(const Point3D what)
+void Graph3D::screenshot(const char *where)
 {
-    // convert point from graph coordinated to absolute rendering coordinates
-    return what;
+    int w, h;
+    SDL_GetWindowSize(wind, &w, &h);
+
+    SDL_Surface *sshot = SDL_CreateRGBSurface(0, w, h, 32, 0, 0, 0, 0);
+    SDL_RenderReadPixels(rend, NULL, 0, sshot->pixels, sshot->pitch);
+    SDL_SaveBMP(sshot, where);
+    SDL_FreeSurface(sshot);
+
+    return;
 }
+
+/////////////////////////////////////////
