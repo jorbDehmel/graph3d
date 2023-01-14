@@ -28,9 +28,11 @@ public:
 
     bool doAxii = true;
     bool doTicks = true;
+    bool doLabels = true;
 
     SDL_Color axisColor = SDL_Color{255, 255, 255, 255};
     SDL_Color backgroundColor = SDL_Color{0, 0, 0, 0};
+    SDL_Color labelColor = SDL_Color{255, 255, 255, 255};
 
     double dotSize = 4;
 

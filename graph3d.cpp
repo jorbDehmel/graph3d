@@ -2,6 +2,10 @@
 
 #include "graph3d.hpp"
 
+char *FONT_PATH = "/usr/include/jgame3d/fonts/Open_Sans/static/OpenSans/OpenSans-Bold.ttf";
+int FONT_POINTS = 12;
+double LABEL_OFFSET = 5;
+
 /////////////////////////////////////////
 
 SDL_Color __DefaultColorFunction(const double &in)
@@ -23,6 +27,8 @@ Graph3D::Graph3D(const int W, const int H, const double (*Equation)(const double
     SDL_Init(SDL_INIT_EVERYTHING);
 
     SDL_CreateWindowAndRenderer(W, H, SDL_WINDOW_OPENGL, &wind, &rend);
+
+    writer = new Writer(rend, FONT_PATH, FONT_POINTS);
 
     equations.push_back(Equation);
     colorEquations.push_back(ColorEquation);
@@ -80,6 +86,39 @@ void Graph3D::refresh()
             Point3D toAdd = convertPoint(Point3D(0, 0, z));
             points.push_back(ColorWrapper(toAdd, axisColor));
         }
+    }
+
+    if (doLabels)
+    {
+        // xmin
+        Point3D where(min.x - LABEL_OFFSET, 0, 0);
+        SDL_FPoint whereProjected = projectPoint(convertPoint(where));
+        writer->write("x=" + to_string(min.x), whereProjected.x, whereProjected.y, labelColor);
+
+        // xmax
+        where = Point3D(max.x + LABEL_OFFSET, 0, 0);
+        whereProjected = SDL_FPoint(projectPoint(convertPoint(where)));
+        writer->write("x=" + to_string(max.x), whereProjected.x, whereProjected.y, labelColor);
+
+        // ymin
+        where = Point3D(0, min.y - LABEL_OFFSET, 0);
+        whereProjected = SDL_FPoint(projectPoint(convertPoint(where)));
+        writer->write("y=" + to_string(min.y), whereProjected.x, whereProjected.y, labelColor);
+
+        // ymax
+        where = Point3D(0, max.y + LABEL_OFFSET, 0);
+        whereProjected = SDL_FPoint(projectPoint(convertPoint(where)));
+        writer->write("y=" + to_string(max.y), whereProjected.x, whereProjected.y, labelColor);
+
+        // zmin
+        where = Point3D(0, 0, min.z - LABEL_OFFSET);
+        whereProjected = SDL_FPoint(projectPoint(convertPoint(where)));
+        writer->write("z=" + to_string(min.z), whereProjected.x, whereProjected.y, labelColor);
+
+        // zmax
+        where = Point3D(0, 0, max.z + LABEL_OFFSET);
+        whereProjected = SDL_FPoint(projectPoint(convertPoint(where)));
+        writer->write("z=" + to_string(max.z), whereProjected.x, whereProjected.y, labelColor);
     }
 
     // calculate points

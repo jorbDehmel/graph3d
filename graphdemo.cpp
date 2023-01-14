@@ -15,6 +15,8 @@ int main()
 {
     FOVScalar = 400;
 
+    FONT_POINTS = 20;
+
     Graph3D g(1028, 1028, eq);
     g.equations.push_back(eq2);
 
@@ -31,6 +33,7 @@ int main()
     bool isRunning = true;
     double stepSize = 5;
     double rotSize = 0.01;
+
     while (isRunning)
     {
         auto start = SDL_GetTicks();
