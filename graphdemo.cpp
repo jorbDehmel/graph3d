@@ -1,3 +1,8 @@
+// 3D graphing sphere demo
+// Jordan "Jorb" Dehmel, 2023
+// jdehmel@outlook.com
+// github.com/jorbDehmel
+
 #include "graph3d.hpp"
 using namespace std;
 
@@ -15,7 +20,8 @@ int main()
 {
     FOVScalar = 400;
 
-    FONT_POINTS = 20;
+    FONT_POINTS = 24;
+    TITLE = "Sphere demo (jdehmel@outlook.com, 2023)";
 
     Graph3D g(1028, 1028, eq);
     g.equations.push_back(eq2);
@@ -26,7 +32,9 @@ int main()
     g.scale = Point3D(5, 5, 5);
     g.axisColor.r = g.axisColor.g = g.axisColor.b = 255;
 
-    g.xSpacing = g.ySpacing = .1;
+    g.dotSize = 1;
+
+    g.xSpacing = g.ySpacing = 1;
 
     int toWait = 10;
 
@@ -59,7 +67,7 @@ int main()
                     break;
                 case 'p':
                     cout << "Saving screenshot...\n";
-                    g.screenshot((string("screenshot_") + to_string(time(NULL)) + ".bmp").c_str());
+                    g.screenshot((string("screenshot_") + to_string(time(NULL)) + ".bmp").c_str(), 1);
                     break;
 
                 // Transposition
@@ -117,10 +125,10 @@ int main()
         {
             SDL_Delay(toWait - end + start);
         }
-        else
+        /*else
         {
             cout << "Update took " << end - start << " ms.\n";
-        }
+        }*/
 
         g.rotation += Rotation(0.01, 0.01, 0.01);
     }

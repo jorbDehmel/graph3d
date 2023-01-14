@@ -1,3 +1,8 @@
+// 3D graphing system
+// Jordan "Jorb" Dehmel, 2023
+// jdehmel@outlook.com
+// github.com/jorbDehmel
+
 #ifndef GRAPH3D_HPP
 #define GRAPH3D_HPP
 
@@ -38,7 +43,7 @@ public:
     void refresh();
 
     // Save a screenshot locally
-    void screenshot(const char *where);
+    void screenshot(const char *Where, const double &AtScale = 1);
 
     ////////////////////////////////
 

@@ -1,3 +1,8 @@
+// 3D graphing system
+// Jordan "Jorb" Dehmel, 2023
+// jdehmel@outlook.com
+// github.com/jorbDehmel
+
 /////////////////////////////////////////
 
 #include "graph3d.hpp"
@@ -196,15 +201,21 @@ void Graph3D::renderPoint(const Point3D what)
     return;
 }
 
-void Graph3D::screenshot(const char *where)
+void Graph3D::screenshot(const char *Where, const double &AtScale)
 {
     int w, h;
     SDL_GetWindowSize(wind, &w, &h);
 
-    SDL_Surface *sshot = SDL_CreateRGBSurface(0, w, h, 32, 0, 0, 0, 0);
-    SDL_RenderReadPixels(rend, NULL, 0, sshot->pixels, sshot->pitch);
-    SDL_SaveBMP(sshot, where);
-    SDL_FreeSurface(sshot);
+    SDL_Surface *unscaled = SDL_CreateRGBSurface(0, w, h, 32, 0, 0, 0, 0);
+    SDL_RenderReadPixels(rend, NULL, 0, unscaled->pixels, unscaled->pitch);
+
+    SDL_Surface *scaled = SDL_CreateRGBSurface(0, w * AtScale, h * AtScale, 32, 0, 0, 0, 0);
+    SDL_BlitScaled(unscaled, NULL, scaled, NULL);
+
+    SDL_SaveBMP(scaled, Where);
+
+    SDL_FreeSurface(unscaled);
+    SDL_FreeSurface(scaled);
 
     return;
 }
