@@ -1,24 +1,9 @@
-/////////////////////////////////////////
-
-#include "graph3d.hpp"
+#include "sim3d.hpp"
 
 /////////////////////////////////////////
 
-SDL_Color __DefaultColorFunction(const double &in)
-{
-    Uint8 val = 255 / (1 + pow(2.718281821, -(in / 10)));
-
-    SDL_Color out;
-    out.a = 255;
-    out.r = out.g = out.b = val;
-
-    return out;
-}
-
-/////////////////////////////////////////
-
-Graph3D::Graph3D(const int W, const int H, const double (*Equation)(const double &, const double &),
-                 SDL_Color (*ColorEquation)(const double &))
+Sim3D::Sim3D(const int W, const int H, bool (*Equation)(Point3D &Cur),
+             SDL_Color (*ColorEquation)(const double &))
 {
     SDL_Init(SDL_INIT_EVERYTHING);
 
@@ -38,7 +23,7 @@ Graph3D::Graph3D(const int W, const int H, const double (*Equation)(const double
     return;
 }
 
-Graph3D::~Graph3D()
+Sim3D::~Sim3D()
 {
     SDL_DestroyRenderer(rend);
     SDL_DestroyWindow(wind);
@@ -50,12 +35,7 @@ Graph3D::~Graph3D()
 
 /////////////////////////////////////////
 
-bool __sortFunction(const ColorWrapper &a, const ColorWrapper &b)
-{
-    return a.p.z > b.p.z;
-}
-
-void Graph3D::refresh()
+void Sim3D::refresh()
 {
     SDL_SetRenderDrawColor(rend, 0, 0, 0, 0);
     SDL_RenderClear(rend);
@@ -83,19 +63,27 @@ void Graph3D::refresh()
     }
 
     // calculate points
-    for (double x = min.x; x < max.x; x += xSpacing)
+    for (int eqInd = 0; eqInd < equations.size(); eqInd++)
     {
-        for (double y = min.y; y < max.y; y += ySpacing)
-        {
-            for (int eqIndex = 0; eqIndex < equations.size(); eqIndex++)
-            {
-                Point3D cur(x, y, (equations[eqIndex])(x, y));
+        Point3D pos;
+        if (startingPositions.empty())
+            pos = Point3D(0, 0, 0);
+        else
+            pos = startingPositions[eqInd % startingPositions.size()];
 
-                if (cur.z > min.z && cur.z < max.z)
-                {
-                    SDL_Color color = (colorEquations[eqIndex % colorEquations.size()])(cur.z);
-                    points.push_back(ColorWrapper(convertPoint(cur), color));
-                }
+        int steps = 0;
+        while (equations[eqInd](pos))
+        {
+            SDL_Color color = (colorEquations[eqInd](pos.z));
+
+            if (pos.x > min.x && pos.x < max.x && pos.y > min.y && pos.y < max.y && pos.z > min.z && pos.z < max.z)
+            {
+                points.push_back(ColorWrapper(convertPoint(pos), color));
+            }
+
+            if (steps++ > 1'000'000)
+            {
+                throw runtime_error("Non-terminating equation.");
             }
         }
     }
@@ -126,7 +114,7 @@ void Graph3D::refresh()
 /////////////////////////////////////////
 
 // convert point from graph coordinates to absolute rendering coordinates
-Point3D Graph3D::convertPoint(const Point3D what)
+Point3D Sim3D::convertPoint(const Point3D what)
 {
     Point3D out;
     out.x = what.x * scale;
@@ -142,7 +130,7 @@ Point3D Graph3D::convertPoint(const Point3D what)
     return out;
 }
 
-void Graph3D::renderPoint(const Point3D what)
+void Sim3D::renderPoint(const Point3D what)
 {
     SDL_FPoint projected = projectPoint(what);
 
@@ -156,7 +144,7 @@ void Graph3D::renderPoint(const Point3D what)
     return;
 }
 
-void Graph3D::screenshot(const char *where)
+void Sim3D::screenshot(const char *where)
 {
     int w, h;
     SDL_GetWindowSize(wind, &w, &h);

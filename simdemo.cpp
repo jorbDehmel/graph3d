@@ -1,36 +1,41 @@
-#include "graph3d.hpp"
+#include "sim3d.hpp"
 using namespace std;
 
-const double eq(const double &x, const double &y)
+bool eq(Point3D &p)
 {
-    return sqrt(100 - pow(x, 2) - pow(y, 2)) + 10 * sin(SDL_GetTicks() / 1000.);
-}
+    p.x += 1;
+    p.y = -p.x;
 
-const double eq2(const double &x, const double &y)
-{
-    return -eq(x, y);
+    return (p.x < 20);
 }
 
 int main()
 {
     FOVScalar = 400;
 
-    Graph3D g(1028, 1028, eq);
-    g.equations.push_back(eq2);
+    Sim3D g(1028, 1028, eq);
+
+    g.min = Point3D(-20, -20, -20);
+    g.max = Point3D(20, 20, 20);
 
     g.scale = 5;
     g.axisColor.r = g.axisColor.g = g.axisColor.b = 255;
 
-    g.xSpacing = g.ySpacing = 1;
+    g.xSpacing = g.ySpacing = .1;
 
     int toWait = 10;
 
     bool isRunning = true;
     double stepSize = 5;
     double rotSize = 0.01;
+
+    g.startingPositions.push_back(Point3D(0, 0, 0));
+
     while (isRunning)
     {
         auto start = SDL_GetTicks();
+
+        g.startingPositions[g.startingPositions.size() - 1] += Point3D(0, .1, 0);
 
         g.refresh();
 
@@ -116,7 +121,7 @@ int main()
             cout << "Update took " << end - start << " ms.\n";
         }
 
-        // g.rotation += Rotation(0.01, 0.01, 0.01);
+        g.rotation += Rotation(0.01, 0.01, 0.01);
     }
 
     return 0;
