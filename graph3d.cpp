@@ -5,6 +5,7 @@
 char *FONT_PATH = "/usr/include/jgame3d/fonts/Open_Sans/static/OpenSans/OpenSans-Bold.ttf";
 int FONT_POINTS = 12;
 double LABEL_OFFSET = 5;
+extern string TITLE = "Untitled graph";
 
 /////////////////////////////////////////
 
@@ -33,13 +34,8 @@ Graph3D::Graph3D(const int W, const int H, const double (*Equation)(const double
     equations.push_back(Equation);
     colorEquations.push_back(ColorEquation);
 
-    rotation = Rotation(0, 0, 0);
     transpose = Point3D(W / 2, H / 2, 200);
-    scale = 1;
-
-    horizon.x = W / 2;
-    horizon.y = H / 2;
-    horizon.z = 100;
+    horizon = transpose;
 
     return;
 }
@@ -121,6 +117,11 @@ void Graph3D::refresh()
         writer->write("z=" + to_string(max.z), whereProjected.x, whereProjected.y, labelColor);
     }
 
+    if (true)
+    {
+        writer->write(TITLE, 5, 5, labelColor);
+    }
+
     // calculate points
     for (double x = min.x; x < max.x; x += xSpacing)
     {
@@ -168,9 +169,9 @@ void Graph3D::refresh()
 Point3D Graph3D::convertPoint(const Point3D what)
 {
     Point3D out;
-    out.x = what.x * scale;
-    out.y = what.y * scale;
-    out.z = what.z * scale;
+    out.x = what.x * scale.x;
+    out.y = what.y * scale.y;
+    out.z = what.z * scale.z;
 
     rotate(out, Rotation(rotation.x + (M_PI / 2), rotation.y, rotation.z));
 

@@ -2,6 +2,7 @@
 #define GRAPH3D_HPP
 
 #include <vector>
+#include <string>
 #include <jgame3d/jgame3d.hpp>
 #include <jgame3d/text.hpp>
 using namespace std;
@@ -9,6 +10,7 @@ using namespace std;
 extern char *FONT_PATH;
 extern int FONT_POINTS;
 extern double LABEL_OFFSET;
+extern string TITLE;
 
 // Default color mapping function corrolating z-values to color
 SDL_Color __DefaultColorFunction(const double &in);
@@ -48,6 +50,7 @@ public:
     bool doAxii = true;
     bool doTicks = true;
     bool doLabels = true;
+    bool doTitle = true;
 
     SDL_Color axisColor = SDL_Color{255, 255, 255, 255};
     SDL_Color backgroundColor = SDL_Color{0, 0, 0, 0};
@@ -57,7 +60,7 @@ public:
 
     Rotation rotation = Rotation(0, 0, 0);
     Point3D transpose = Point3D(0, 0, 0);
-    double scale = 1;
+    Point3D scale = Point3D(1, 1, 1);
 
     vector<const double (*)(const double &x, const double &y)> equations;
     vector<SDL_Color (*)(const double &z)> colorEquations;
