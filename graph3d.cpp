@@ -24,8 +24,8 @@ Graph3D::Graph3D(const int W, const int H, const double (*Equation)(const double
 
     SDL_CreateWindowAndRenderer(W, H, SDL_WINDOW_OPENGL, &wind, &rend);
 
-    equation = Equation;
-    colorEquation = ColorEquation;
+    equations.push_back(Equation);
+    colorEquations.push_back(ColorEquation);
 
     rotation = Rotation(0, 0, 0);
     transpose = Point3D(W / 2, H / 2, 200);
@@ -87,12 +87,15 @@ void Graph3D::refresh()
     {
         for (double y = min.y; y < max.y; y += ySpacing)
         {
-            Point3D cur(x, y, equation(x, y));
-
-            if (cur.z > min.z && cur.z < max.z)
+            for (int eqIndex = 0; eqIndex < equations.size(); eqIndex++)
             {
-                SDL_Color color = colorEquation(cur.z);
-                points.push_back(ColorWrapper{convertPoint(cur), color});
+                Point3D cur(x, y, (equations[eqIndex])(x, y));
+
+                if (cur.z > min.z && cur.z < max.z)
+                {
+                    SDL_Color color = (colorEquations[eqIndex % colorEquations.size()])(cur.z);
+                    points.push_back(ColorWrapper{convertPoint(cur), color});
+                }
             }
         }
     }
@@ -102,6 +105,13 @@ void Graph3D::refresh()
 
     for (int i = 0; i < points.size(); i++)
     {
+        if (points[i].p.x < 0)
+            continue;
+        else if (points[i].p.y < 0)
+            continue;
+        else if (points[i].p.z < 0)
+            continue;
+
         SDL_Color color = points[i].color;
         SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a);
 
@@ -123,7 +133,7 @@ Point3D Graph3D::convertPoint(const Point3D what)
     out.y = what.y * scale;
     out.z = what.z * scale;
 
-    rotate(out, rotation);
+    rotate(out, Rotation(rotation.x + (M_PI / 2), rotation.y, rotation.z));
 
     out.x += transpose.x;
     out.y += transpose.y;

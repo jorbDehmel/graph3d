@@ -1,7 +1,10 @@
 #ifndef GRAPH3D_HPP
 #define GRAPH3D_HPP
 
+#include <vector>
 #include <jgame3d/jgame3d.hpp>
+#include <jgame3d/text.hpp>
+using namespace std;
 
 // Default color mapping function corrolating z-values to color
 SDL_Color __DefaultColorFunction(const double &in);
@@ -50,10 +53,11 @@ public:
     Point3D transpose = Point3D(0, 0, 0);
     double scale = 1;
 
-protected:
-    const double (*equation)(const double &x, const double &y);
-    SDL_Color (*colorEquation)(const double &z);
+    vector<const double (*)(const double &x, const double &y)> equations;
+    vector<SDL_Color (*)(const double &z)> colorEquations;
 
+protected:
+    Writer *writer;
     SDL_Renderer *rend;
     SDL_Window *wind;
 
