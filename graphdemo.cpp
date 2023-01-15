@@ -28,11 +28,12 @@ int main()
 
     g.min.z = -20;
     g.max.z = 20;
+    LABEL_OFFSET = 0;
 
     g.scale = Point3D(5, 5, 5);
     g.axisColor.r = g.axisColor.g = g.axisColor.b = 255;
 
-    g.dotSize = 1;
+    g.dotSize = 2;
 
     g.xSpacing = g.ySpacing = 1;
 

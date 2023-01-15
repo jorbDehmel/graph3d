@@ -6,9 +6,11 @@ SUFFIX = -pedantic -Wall `jgame3d-flags`
 
 graphdemo.out:	graphdemo.o graph3d.o
 	clang++ -o graphdemo.out graph3d.o graphdemo.o $(SUFFIX)
+	chmod +x graphdemo.out
 
 simdemo.out:	simdemo.o sim3d.o graph3d.o
 	clang++ -o simdemo.out simdemo.o graph3d.o sim3d.o $(SUFFIX)
+	chmod +x simdemo.out
 
 ###########################
 
